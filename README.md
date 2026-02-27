@@ -29,14 +29,27 @@ ollama pull llama3.1
 
 ## Run
 
+**Terminal 1 — API Server:**
 ```bash
 python main.py
 ```
-
 Server starts at `http://localhost:8000`
+
+**Terminal 2 — Streamlit UI:**
+```bash
+streamlit run app.py
+```
+Opens at `http://localhost:8501`
 
 ## Usage
 
+### Via Web UI (recommended)
+1. Open http://localhost:8501
+2. Upload image or paste URL
+3. Click "Analyze"
+4. Get instant description + sources
+
+### Via API (curl)
 ```bash
 curl -X POST http://localhost:8000/analyze -F "file=@photo.jpg"
 ```
@@ -67,9 +80,20 @@ free_image_agent/
 └── requirements.txt
 ```
 
+## Features
+
+- 📤 **Upload** images (drag-n-drop support)
+- 🔗 **URL support** — paste image link directly
+- 🔄 **Reverse image search** via TinEye (+ Yandex/Bing fallback)
+- 🤖 **Local LLM** — Ollama llama3.1, fully offline
+- 💾 **Smart cache** — same image = instant result
+- 🎨 **Clean UI** — Streamlit web app
+- 🆓 **100% free** — no API keys, no subscriptions
+
 ## Stack
 
-- **FastAPI** + uvicorn
+- **Streamlit** — web UI
+- **FastAPI** + uvicorn — API backend
 - **PicImageSearch** (TinEye, Yandex, Bing engines)
 - **Ollama** with llama3.1 (local, free)
-- **Pillow** for image resize
+- **Pillow** for image processing

@@ -5,3 +5,5 @@ PicImageSearch
 Pillow
 httpx
 aiofiles
+streamlit
+requests
