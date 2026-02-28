@@ -97,3 +97,5 @@ free_image_agent/
 - **PicImageSearch** (TinEye, Yandex, Bing engines)
 - **Ollama** with llama3.1 (local, free)
 - **Pillow** for image processing
+
+Made with ❤️ by uzbtrust
