@@ -98,4 +98,5 @@ free_image_agent/
 - **Ollama** with llama3.1 (local, free)
 - **Pillow** for image processing
 
+
 Made with ❤️ by uzbtrust
