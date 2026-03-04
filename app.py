@@ -117,16 +117,28 @@ def show_result(result):
                     st.markdown(f"- {s['title']}")
 
     if result.get("steps"):
-        with st.expander("🧠 Agent qadamlari", expanded=False):
+        with st.expander("🧠 Agent qadamlari (ReAct)", expanded=False):
             for i, step in enumerate(result["steps"]):
                 icon = "✅" if step.get("status") == "done" else "❌"
-                line = f"{icon} **{step['action']}**"
-                if step.get("engine"):
-                    line += f" ({step['engine']})"
-                if step.get("count") is not None:
-                    line += f" → {step['count']} ta natija"
-                if step.get("quality"):
-                    line += f" → {step['quality']}"
+                act = step.get("action", "?")
+
+                if act == "llm_think":
+                    line = f"{icon} **Turn {step.get('turn', '?')}:** Agent o'ylayapti..."
+                elif act == "tool_call":
+                    line = f"{icon} **Tool:** `{step.get('tool', '?')}`"
+                    if step.get("count") is not None:
+                        line += f" → {step['count']} ta natija"
+                elif act == "final_answer":
+                    line = f"{icon} **Yakuniy javob berildi** (Turn {step.get('turn', '?')})"
+                elif act == "max_turns":
+                    line = f"⚠️ **Maksimal qadamlar tugadi** — javob majburlandi"
+                else:
+                    line = f"{icon} **{act}**"
+                    if step.get("engine"):
+                        line += f" ({step['engine']})"
+                    if step.get("count") is not None:
+                        line += f" → {step['count']} ta natija"
+
                 st.markdown(line)
 
 
