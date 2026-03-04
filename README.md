@@ -1,8 +1,39 @@
-# ReverseLens
+# 🔍 ReverseLens
 
 Autonomous reverse image search agent — upload a photo, the AI agent decides how to search, analyzes results, and describes what's in the image. Powered by ReAct loop + Ollama. Fully free, no paid APIs.
 
-## How it works
+---
+
+## 📸 Screenshots
+
+### Main Page
+<p align="center">
+  <img src="docs/01_main_page.png" width="700" alt="ReverseLens Main Page"/>
+</p>
+
+### Search Results
+> Agent autonomously picked search engines, analyzed results, and generated description
+
+<p align="center">
+  <img src="docs/02_search_results_top.png" width="700" alt="Search Results — Top"/>
+</p>
+<p align="center">
+  <img src="docs/03_search_results_bottom.png" width="700" alt="Search Results — Bottom"/>
+</p>
+
+### Cached Results
+> Same image = instant response from cache, no re-search needed
+
+<p align="center">
+  <img src="docs/04_cached_result_top.png" width="700" alt="Cached Result — Top"/>
+</p>
+<p align="center">
+  <img src="docs/05_cached_result_bottom.png" width="700" alt="Cached Result — Bottom"/>
+</p>
+
+---
+
+## ⚙️ How it works
 
 1. You send an image (upload or URL)
 2. Image gets preprocessed (resize, sharpen, contrast)
@@ -25,7 +56,9 @@ Turn 3: Agent thinks → enough results → returns final answer
 
 The LLM drives the entire workflow. No hardcoded search order.
 
-## Setup
+---
+
+## 🚀 Setup
 
 ```bash
 cd free_image_agent
@@ -47,7 +80,7 @@ brew install redis
 brew services start redis
 ```
 
-## Run
+## ▶️ Run
 
 **Terminal 1 — API:**
 ```bash
@@ -64,7 +97,9 @@ streamlit run app.py
 celery -A services.tasks worker --loglevel=info
 ```
 
-## Usage
+---
+
+## 📖 Usage
 
 ### Web UI (recommended)
 Open http://localhost:8501
@@ -105,7 +140,9 @@ curl http://localhost:8000/task/TASK_ID
 # returns status + result
 ```
 
-## Architecture
+---
+
+## 🏗️ Architecture
 
 ```
 free_image_agent/
@@ -123,13 +160,16 @@ free_image_agent/
 │   ├── cache.py             # MD5 hash + JSON cache
 │   ├── db.py                # SQLite database
 │   └── auth.py              # JWT authentication
+├── docs/                    # Screenshots
 ├── static/uploads/          # temp images (auto-cleaned)
 ├── reverselens.db           # SQLite (auto-created)
 ├── cache.json
 └── requirements.txt
 ```
 
-## What makes it a real agent
+---
+
+## 🤖 What makes it a real agent
 
 | Aspect | Before (pseudo-agent) | Now (ReAct agent) |
 |--------|----------------------|-------------------|
@@ -139,7 +179,9 @@ free_image_agent/
 | Decision making | 2 yes/no questions | Full reasoning at every step |
 | Architecture | Linear pipeline | ReAct loop (Thought → Action → Observation) |
 
-## Features
+---
+
+## ✨ Features
 
 - 🤖 **ReAct Agent** — LLM autonomously decides search strategy via tool calling
 - 📤 **Upload** images (drag-n-drop)
@@ -154,7 +196,7 @@ free_image_agent/
 - 🖼️ **Image preprocessing** — sharpen, contrast, resize
 - 🎨 **Streamlit UI** — clean web interface with agent step visualization
 
-## Stack
+## 🛠 Stack
 
 - **Streamlit** — web UI
 - **FastAPI** + uvicorn — API backend
@@ -166,5 +208,6 @@ free_image_agent/
 - **Celery + Redis** — async task queue
 - **Pillow** — image preprocessing
 
+---
 
 Made with ❤️ by uzbtrust
