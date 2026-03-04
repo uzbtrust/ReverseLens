@@ -4,6 +4,23 @@ OLLAMA_URL = "http://localhost:11434/api/generate"
 MODEL = "llama3.1"
 
 
+async def ask_llm(prompt, temp=0.3):
+    try:
+        async with httpx.AsyncClient(timeout=60) as client:
+            resp = await client.post(OLLAMA_URL, json={
+                "model": MODEL,
+                "prompt": prompt,
+                "stream": False,
+                "options": {"temperature": temp}
+            })
+            data = resp.json()
+            return data.get("response", "").strip()
+    except httpx.ConnectError:
+        return None
+    except:
+        return None
+
+
 async def make_answer(search_results):
     if not search_results:
         return "Hech narsa topilmadi"
@@ -26,18 +43,8 @@ Natijalar:
 
 Javob:"""
 
-    try:
-        async with httpx.AsyncClient(timeout=60) as client:
-            resp = await client.post(OLLAMA_URL, json={
-                "model": MODEL,
-                "prompt": prompt,
-                "stream": False,
-                "options": {"temperature": 0.3}
-            })
-            data = resp.json()
-            return data.get("response", "").strip()
-    except httpx.ConnectError:
-        # ollama ishlamayapti, oddiy javob qaytaramiz
-        return f"(Ollama ishlamayapti) Eng yaqin natija: {search_results[0]['title']}"
-    except:
-        return f"Taxminiy: {search_results[0]['title']}"
+    answer = await ask_llm(prompt)
+    if answer:
+        return answer
+
+    return f"Taxminiy: {search_results[0]['title']}"

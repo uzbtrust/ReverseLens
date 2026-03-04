@@ -7,3 +7,6 @@ httpx
 aiofiles
 streamlit
 requests
+PyJWT
+slowapi
+celery[redis]

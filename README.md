@@ -4,12 +4,16 @@ Upload an image, get a description — powered by reverse image search + local L
 
 ## How it works
 
-1. You send an image to `/analyze` endpoint
-2. Image gets resized to 512x512 and hashed (for caching)
-3. Reverse image search runs via **TinEye** (fallback: Yandex → Bing)
-4. Search results (titles, URLs) are sent to **Ollama** (llama3.1)
-5. LLM generates a short description in Uzbek based on what the internet says about the image
-6. Result is cached so the same image won't be searched again
+1. You send an image (upload or URL)
+2. Image gets preprocessed (resize, sharpen, contrast)
+3. **Agentic loop** kicks in:
+   - Agent searches TinEye first
+   - Evaluates results with LLM — enough or not?
+   - If not enough, tries Yandex → Bing
+   - Generates answer, checks quality
+   - Regenerates if quality is poor
+4. Result saved to SQLite history + JSON cache
+5. Authenticated users get higher rate limits + history
 
 ## Setup
 
@@ -20,83 +24,125 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-Install and start Ollama:
+Ollama:
 ```bash
 brew install ollama
 brew services start ollama
 ollama pull llama3.1
 ```
 
+Optional (for async queue):
+```bash
+brew install redis
+brew services start redis
+```
+
 ## Run
 
-**Terminal 1 — API Server:**
+**Terminal 1 — API:**
 ```bash
 python main.py
 ```
-Server starts at `http://localhost:8000`
 
-**Terminal 2 — Streamlit UI:**
+**Terminal 2 — Web UI:**
 ```bash
 streamlit run app.py
 ```
-Opens at `http://localhost:8501`
+
+**Terminal 3 — Celery worker (optional):**
+```bash
+celery -A services.tasks worker --loglevel=info
+```
 
 ## Usage
 
-### Via Web UI (recommended)
-1. Open http://localhost:8501
-2. Upload image or paste URL
-3. Click "Analyze"
-4. Get instant description + sources
+### Web UI (recommended)
+Open http://localhost:8501
+- Upload tab: drag-n-drop or file picker
+- URL tab: paste image link
+- History tab: view past analyses (requires login)
 
-### Via API (curl)
+### API
+
+**Public (10 req/min):**
 ```bash
 curl -X POST http://localhost:8000/analyze -F "file=@photo.jpg"
 ```
 
-Response:
-```json
-{
-  "answer": "Qizil olma, stol ustida yotibdi",
-  "sources": [
-    {"title": "Red Apple on Table", "url": "https://example.com/..."}
-  ],
-  "cached": false
-}
+**With auth (20 req/min + history):**
+```bash
+# register
+curl -X POST http://localhost:8000/register \
+  -H "Content-Type: application/json" \
+  -d '{"username":"user1","password":"pass1234"}'
+
+# analyze
+curl -X POST http://localhost:8000/analyze/auth \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -F "file=@photo.jpg"
+
+# history
+curl http://localhost:8000/history \
+  -H "Authorization: Bearer YOUR_TOKEN"
 ```
+
+**Async (requires Redis):**
+```bash
+curl -X POST http://localhost:8000/analyze/async -F "file=@photo.jpg"
+# returns task_id
+
+curl http://localhost:8000/task/TASK_ID
+# returns status + result
+```
+
+## Features
+
+- 🤖 **Agentic loop** — LLM decides search strategy and evaluates results
+- 📤 **Upload** images (drag-n-drop)
+- 🔗 **URL support** — paste image link directly
+- 🔄 **Multi-engine search** — TinEye → Yandex → Bing
+- 🧠 **Local LLM** — Ollama llama3.1, fully offline
+- 💾 **Smart cache** — JSON file, same image = instant
+- 🗄️ **SQLite database** — search history per user
+- 🔐 **JWT auth** — register/login, protected endpoints
+- ⏱️ **Rate limiting** — 10/min public, 20/min authenticated
+- 📋 **Async queue** — Celery + Redis for background tasks
+- 🖼️ **Image preprocessing** — sharpen, contrast, resize
+- 🎨 **Streamlit UI** — clean web interface
 
 ## Project structure
 
 ```
 free_image_agent/
-├── main.py              # FastAPI app
+├── main.py                # FastAPI + auth + rate limiting + queue
+├── app.py                 # Streamlit web UI
 ├── services/
-│   ├── search.py        # TinEye / Yandex / Bing reverse search
-│   └── analyze.py       # Ollama LLM integration
+│   ├── search.py          # TinEye / Yandex / Bing
+│   ├── analyze.py         # Ollama LLM
+│   ├── agent.py           # Agentic loop orchestrator
+│   ├── preprocess.py      # Image enhancement
+│   └── tasks.py           # Celery async tasks
 ├── utils/
-│   └── cache.py         # MD5 hash + JSON file cache
-├── static/uploads/      # temp image storage (auto-cleaned)
+│   ├── cache.py           # MD5 hash + JSON cache
+│   ├── db.py              # SQLite database
+│   └── auth.py            # JWT authentication
+├── static/uploads/        # temp images (auto-cleaned)
+├── reverselens.db         # SQLite (auto-created)
 ├── cache.json
 └── requirements.txt
 ```
-
-## Features
-
-- 📤 **Upload** images (drag-n-drop support)
-- 🔗 **URL support** — paste image link directly
-- 🔄 **Reverse image search** via TinEye (+ Yandex/Bing fallback)
-- 🤖 **Local LLM** — Ollama llama3.1, fully offline
-- 💾 **Smart cache** — same image = instant result
-- 🎨 **Clean UI** — Streamlit web app
-- 🆓 **100% free** — no API keys, no subscriptions
 
 ## Stack
 
 - **Streamlit** — web UI
 - **FastAPI** + uvicorn — API backend
-- **PicImageSearch** (TinEye, Yandex, Bing engines)
-- **Ollama** with llama3.1 (local, free)
-- **Pillow** for image processing
+- **PicImageSearch** — reverse image search (TinEye, Yandex, Bing)
+- **Ollama** llama3.1 — local LLM (free)
+- **SQLite** — user history
+- **JWT** — authentication
+- **slowapi** — rate limiting
+- **Celery + Redis** — async task queue
+- **Pillow** — image preprocessing
 
 
 Made with ❤️ by uzbtrust
